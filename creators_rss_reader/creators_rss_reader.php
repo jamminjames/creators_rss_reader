@@ -157,9 +157,25 @@ class CreatorsRSSParser
         $post['post_author'] = self::$instance->get_user_id($item->author);
         $post['post_date'] = date('Y-m-d H:i:s', strtotime($item->pubDate));
         
-        //var_dump($post);
+        var_dump($post);
         
-        return wp_insert_post($post);
+        add_filter('posts_where', array('CreatorsRSSParser', 'filter_post_like'), 10, 2);
+        
+        $args = array(
+            'cr_search_name' => substr($post['post_name'], 0, strpos($post['post_name'], '-'))
+        );
+        
+        $wp_query = new WP_Query($args);
+        remove_filter( 'posts_where', 'title_filter', 10, 2 );
+        
+        if(!$wp_query->have_posts())
+        {
+            return wp_insert_post($post);
+        }
+        else
+        {
+            return FALSE;
+        }
     }
     
     private function create_user($filecode)
@@ -185,21 +201,30 @@ class CreatorsRSSParser
             }
             
             //var_dump($user);
+            $exists = email_exists($user['user_email']);
             
-            $id = wp_insert_user($user);
+            if($exists === FALSE)
+            {
+                $id = wp_insert_user($user);
+                
+                if(is_int($id))
+                {
+                    $exists = $id;
+                }
+                else
+                {
+                    return $id;
+                }
+            }
             
-            if(is_int($id))
+            if(is_int($exists))
             {
                 $users = get_option('creators_feed_reader_user_ids');
-                $users[$filecode] = $id;
+                $users[$filecode] = $exists;
                 
                 update_option('creators_feed_reader_user_ids', $users);
                 
                 return TRUE;
-            }
-            else
-            {
-                return $id;
             }
         }
         catch(API_Exception $e)
@@ -289,7 +314,7 @@ class CreatorsRSSParser
         
         if($features !== NULL && count($features) > 0)
         {
-            add_settings_section('creators_rss_features', 'Add Features', array('CreatorsRSSParser', 'display_features_text'), 'creators_rss');
+            add_settings_section('creators_rss_features', 'Your Features', array('CreatorsRSSParser', 'display_features_text'), 'creators_rss');
             foreach($features as $f)
             {
                 add_settings_field('creators_feed_reader_features['.$f['file_code'].']', $f['title'], array('CreatorsRSSParser', 'display_setting_author_checkbox'), 'creators_rss', 'creators_rss_features', array($f['file_code']));
@@ -305,12 +330,12 @@ class CreatorsRSSParser
     
     function display_main_text()
     {
-        echo '<p>General Feed Reader Settings</p>';
+        echo '<p>General feed reader settings</p>';
     }
     
     function display_features_text()
     {
-        echo '<p>General Feed Reader Settings</p>';
+        echo '<p>Enable features you want to post to your site below</p>';
     }
     
     function display_setting_name_pattern()
@@ -380,6 +405,21 @@ class CreatorsRSSParser
     {
         $links[] = '<a href="'. esc_url( get_admin_url(null, 'options-general.php?page=creators-rss-feeds-options') ) .'">Settings</a>';
         return $links;
+    }
+    
+    function filter_post_like($where, &$wp_query)
+    {
+        global $wpdb;
+
+        if($search_term = $wp_query->get('cr_search_name'))
+        {
+            $search_term = $wpdb->esc_like($search_term);
+            $search_term = ' \'' . $search_term . '-%\'';
+            var_dump($search_term);
+            $where .= ' AND ' . $wpdb->posts . '.post_name LIKE '.$search_term;
+        }
+        
+        return $where;
     }
 }
 

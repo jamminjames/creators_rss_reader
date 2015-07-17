@@ -20,7 +20,7 @@ else
     require_once(dirname(__FILE__).'/creators_php/creators_php.php');
 }
 
-class CreatorsRSSParser
+class CreatorsRSSReader
 {
     protected static $default_options = array(
         'creators_feed_reader_auto_publish'=>TRUE, 
@@ -39,10 +39,10 @@ class CreatorsRSSParser
         is_null(self::$instance) AND self::$instance = new self;
         
         // Actions
-        add_action('parse_rss_feed', array('CreatorsRSSParser', 'parse_rss_feed'));
-        add_action('admin_menu', array('CreatorsRSSParser', 'add_menu_option'));
-        add_action('admin_init', array('CreatorsRSSParser', 'register_settings'));
-        add_filter('plugin_action_links_'.plugin_basename(__FILE__), array('CreatorsRSSParser', 'plugin_action_links'));
+        add_action('parse_rss_feed', array('CreatorsRSSReader', 'parse_rss_feed'));
+        add_action('admin_menu', array('CreatorsRSSReader', 'add_menu_option'));
+        add_action('admin_init', array('CreatorsRSSReader', 'register_settings'));
+        add_filter('plugin_action_links_'.plugin_basename(__FILE__), array('CreatorsRSSReader', 'plugin_action_links'));
         
         return self::$instance;
     }
@@ -165,7 +165,7 @@ class CreatorsRSSParser
         
         var_dump($post);
         
-        add_filter('posts_where', array('CreatorsRSSParser', 'filter_post_like'), 10, 2);
+        add_filter('posts_where', array('CreatorsRSSReader', 'filter_post_like'), 10, 2);
         
         $args = array(
             'cr_search_name' => substr($post['post_name'], 0, strpos($post['post_name'], '-'))
@@ -302,10 +302,10 @@ class CreatorsRSSParser
         register_setting('creators_rss', 'creators_feed_reader_post_name_pattern');
         register_setting('creators_rss', 'creators_feed_reader_features');
         
-        add_settings_section('creators_rss_main', 'Main Settings', array('CreatorsRSSParser', 'display_main_text'), 'creators_rss');
-        add_settings_field('creators_feed_reader_api_key', 'Your API Key', array('CreatorsRSSParser', 'display_setting_api_key'), 'creators_rss', 'creators_rss_main');
-        add_settings_field('creators_feed_reader_auto_publish', 'Publish Automatically', array('CreatorsRSSParser', 'display_setting_auto_publish'), 'creators_rss', 'creators_rss_main');
-        add_settings_field('creators_feed_reader_post_name_pattern', 'Post URL Pattern', array('CreatorsRSSParser', 'display_setting_name_pattern'), 'creators_rss', 'creators_rss_main');
+        add_settings_section('creators_rss_main', 'Main Settings', array('CreatorsRSSReader', 'display_main_text'), 'creators_rss');
+        add_settings_field('creators_feed_reader_api_key', 'Your API Key', array('CreatorsRSSReader', 'display_setting_api_key'), 'creators_rss', 'creators_rss_main');
+        add_settings_field('creators_feed_reader_auto_publish', 'Publish Automatically', array('CreatorsRSSReader', 'display_setting_auto_publish'), 'creators_rss', 'creators_rss_main');
+        add_settings_field('creators_feed_reader_post_name_pattern', 'Post URL Pattern', array('CreatorsRSSReader', 'display_setting_name_pattern'), 'creators_rss', 'creators_rss_main');
         
         $cr = new Creators_API(get_option('creators_feed_reader_api_key'));
         
@@ -321,18 +321,18 @@ class CreatorsRSSParser
         
         if($features !== NULL && count($features) > 0)
         {
-            add_settings_section('creators_rss_features', 'Your Features', array('CreatorsRSSParser', 'display_features_text'), 'creators_rss');
+            add_settings_section('creators_rss_features', 'Your Features', array('CreatorsRSSReader', 'display_features_text'), 'creators_rss');
             foreach($features as $f)
             {
-                add_settings_field('creators_feed_reader_features['.$f['file_code'].']', $f['title'], array('CreatorsRSSParser', 'display_setting_author_checkbox'), 'creators_rss', 'creators_rss_features', array($f['file_code']));
+                add_settings_field('creators_feed_reader_features['.$f['file_code'].']', $f['title'], array('CreatorsRSSReader', 'display_setting_author_checkbox'), 'creators_rss', 'creators_rss_features', array($f['file_code']));
             }
         }
     }
     
     function add_menu_option()
     {
-        $page_hook = add_submenu_page('options-general.php', 'Creators RSS Feed', 'Creators RSS Feed', 'manage_options', 'creators-rss-feeds-options', array('CreatorsRSSParser', 'display_options_page'));
-        add_action('load-'.$page_hook, array('CreatorsRSSParser', 'settings_load_hook'));
+        $page_hook = add_submenu_page('options-general.php', 'Creators RSS Feed', 'Creators RSS Feed', 'manage_options', 'creators-rss-feeds-options', array('CreatorsRSSReader', 'display_options_page'));
+        add_action('load-'.$page_hook, array('CreatorsRSSReader', 'settings_load_hook'));
     }
     
     function display_main_text()
@@ -432,15 +432,15 @@ class CreatorsRSSParser
 
 /* Set hooks */
 
-add_action('plugins_loaded', array('CreatorsRSSParser', 'init'));
+add_action('plugins_loaded', array('CreatorsRSSReader', 'init'));
 
 // Activation hook
-register_activation_hook( __FILE__, array('CreatorsRSSParser', 'activate'));
+register_activation_hook( __FILE__, array('CreatorsRSSReader', 'activate'));
 
 // Deactivation hook
-register_deactivation_hook( __FILE__, array('CreatorsRSSParser', 'deactivate'));
+register_deactivation_hook( __FILE__, array('CreatorsRSSReader', 'deactivate'));
 
 // Uninstall hook
-register_uninstall_hook( __FILE__, array('CreatorsRSSParser', 'uninstall'));
+register_uninstall_hook( __FILE__, array('CreatorsRSSReader', 'uninstall'));
 
 /* End of file */

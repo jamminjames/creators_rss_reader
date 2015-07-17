@@ -22,8 +22,6 @@ else
 
 class CreatorsRSSParser
 {
-    private $api_key;
-    
     protected static $default_options = array(
         'creators_feed_reader_auto_publish'=>TRUE, 
         'creators_feed_reader_user_id'=>1,
@@ -39,9 +37,6 @@ class CreatorsRSSParser
     function init() 
     {
         is_null(self::$instance) AND self::$instance = new self;
-        
-        // Store API Key
-        self::$instance->api_key = self::$instance->get_setting('creators_feed_reader_api_key');
         
         // Actions
         add_action('parse_rss_feed', array('CreatorsRSSParser', 'parse_rss_feed'));
@@ -112,10 +107,10 @@ class CreatorsRSSParser
             return FALSE;
         }
         
-        if(self::$instance->api_key === '')
+        if(get_option('creators_feed_reader_api_key') === '')
             return;
         
-        $url = 'http://get.creators.com/feed/'.self::$instance->api_key.'.rss';
+        $url = 'http://get.creators.com/feed/'.get_option('creators_feed_reader_api_key').'.rss';
         $xml = simplexml_load_file($url);
         
         //var_dump($xml->channel);
@@ -153,7 +148,7 @@ class CreatorsRSSParser
         $post['post_content'] = (string)$item->description;
         $post['post_name'] = self::$instance->parse_post_name($item);
         $post['post_title'] = (string)substr($item->title[0], 0, strrpos($item->title[0], ' by '));
-        $post['post_status'] = self::$instance->get_setting('creators_feed_reader_auto_publish')? 'publish': 'draft';
+        $post['post_status'] = get_option('creators_feed_reader_auto_publish')? 'publish': 'draft';
         $post['post_author'] = self::$instance->get_user_id($item->author);
         $post['post_date'] = date('Y-m-d H:i:s', strtotime($item->pubDate));
         
@@ -260,7 +255,7 @@ class CreatorsRSSParser
      */
     private function parse_post_name($item)
     {
-        $slug = self::$instance->get_setting('creators_feed_reader_post_name_pattern');
+        $slug = get_option('creators_feed_reader_post_name_pattern');
         preg_match('|/([0-9]+)|', $item->guid, $matches);
         $post_id = $matches[1];
         $post_title = sanitize_title(trim(substr($item->title, 0, strrpos($item->title, ' by '))));
@@ -283,11 +278,6 @@ class CreatorsRSSParser
     /**
      * Settings functions
      */
-    private function get_setting($setting_slug)
-    {
-        return get_option($setting_slug);
-    }
-    
     function register_settings()
     {
         register_setting('creators_rss', 'creators_feed_reader_api_key');

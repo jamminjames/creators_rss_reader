@@ -27,7 +27,7 @@ class CreatorsRSSReader
         'creators_feed_reader_user_id'=>1,
         'creators_feed_reader_api_key'=>'',
         'creators_feed_reader_post_name_pattern'=>'%t', 
-        'creators_feed_reader_user_ids'=>'a:0:{}',
+        'creators_feed_reader_user_ids'=>array(),
         'creators_feed_reader_last_run'=>0,
         'creators_feed_reader_features'=>array()
     );
@@ -191,11 +191,10 @@ class CreatorsRSSReader
      * @return boolean
      */
     private function create_user($filecode)
-    {        
-        $cr = new Creators_API(get_option('creators_feed_reader_api_key'));
-        
+    {
         try
         {
+            $cr = new Creators_API(get_option('creators_feed_reader_api_key'));
             $feature = $cr->get_feature_details($filecode);
             
             $user = array();
@@ -239,7 +238,7 @@ class CreatorsRSSReader
                 return TRUE;
             }
         }
-        catch(API_Exception $e)
+        catch(APIException $e)
         {
             return FALSE;
         }
@@ -307,13 +306,12 @@ class CreatorsRSSReader
         add_settings_field('creators_feed_reader_auto_publish', 'Publish Automatically', array('CreatorsRSSReader', 'display_setting_auto_publish'), 'creators_rss', 'creators_rss_main');
         add_settings_field('creators_feed_reader_post_name_pattern', 'Post URL Pattern', array('CreatorsRSSReader', 'display_setting_name_pattern'), 'creators_rss', 'creators_rss_main');
         
-        $cr = new Creators_API(get_option('creators_feed_reader_api_key'));
-        
         try 
         {
+            $cr = new Creators_API(get_option('creators_feed_reader_api_key'));
             $features = $cr->get_features();
         } 
-        catch(API_Exception $e) 
+        catch(APIException $e) 
         {
             $features = NULL;
         }

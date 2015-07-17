@@ -11,6 +11,15 @@
 
 defined( 'ABSPATH' ) OR exit;
 
+if(!file_exists(dirname(__FILE__).'/creators_php.php'))
+{
+    exit('Please install the Creators PHP library to continue');
+}
+else
+{
+    require_once(dirname(__FILE__).'/creators_php.php');
+}
+
 class CreatorsRSSParser
 {
     private $api_key;
@@ -148,21 +157,18 @@ class CreatorsRSSParser
         $post['post_author'] = self::$instance->get_user_id($item->author);
         $post['post_date'] = date('Y-m-d H:i:s', strtotime($item->pubDate));
         
-        var_dump($post);
+        //var_dump($post);
         
         return wp_insert_post($post);
     }
     
     private function create_user($filecode)
-    {
-        $response = self::$instance->api_request('/features/details/json/'.$filecode);
+    {        
+        $cr = new Creators_API(get_option('creators_feed_reader_api_key'));
         
-        if($response != NULL)
+        try
         {
-            $feature = json_decode($response, TRUE);
-            
-            if($feature === NULL)
-                return FALSE;
+            $feature = $cr->get_feature_details($filecode);
             
             $user = array();
             $user['user_login'] = self::$instance->make_username($feature['title']);
@@ -177,6 +183,8 @@ class CreatorsRSSParser
                 list($user['first_name'], $user['last_name']) = explode(' ', $feature['authors'][0]['name'], 2);
                 $user['description'] = strip_tags(str_replace('</p>', "\r\n\r\n", $feature['authors'][0]['bio']));
             }
+            
+            //var_dump($user);
             
             $id = wp_insert_user($user);
             
@@ -194,30 +202,10 @@ class CreatorsRSSParser
                 return $id;
             }
         }
-        
-        return FALSE;
-    }
-    
-    // Replace with Creators_PHP function calls
-    private function api_request($url, $post_data=array())
-    {
-        $ch = curl_init('http://get.creators.com/api'.$url);
-     
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, 
-            array('X_API_KEY: '.self::$instance->api_key, 
-                  'X_API_VERSION: 0.31'));
-
-        curl_setopt($ch, CURLOPT_VERBOSE, 1);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-
-        if(!empty($post_data))
+        catch(API_Exception $e)
         {
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post_data));
+            return FALSE;
         }
-
-        return curl_exec($ch);
     }
     
     /**
@@ -287,7 +275,17 @@ class CreatorsRSSParser
         add_settings_field('creators_feed_reader_auto_publish', 'Publish Automatically', array('CreatorsRSSParser', 'display_setting_auto_publish'), 'creators_rss', 'creators_rss_main');
         add_settings_field('creators_feed_reader_post_name_pattern', 'Post URL Pattern', array('CreatorsRSSParser', 'display_setting_name_pattern'), 'creators_rss', 'creators_rss_main');
         
-        $features = json_decode(self::$instance->api_request('/features/get_list/json/NULL/1000'), TRUE);
+        $cr = new Creators_API(get_option('creators_feed_reader_api_key'));
+        
+        try 
+        {
+            $features = $cr->get_features();
+        } 
+        catch(API_Exception $e) 
+        {
+            $features = NULL;
+        }
+
         
         if($features !== NULL && count($features) > 0)
         {
@@ -352,13 +350,13 @@ class CreatorsRSSParser
 	}
         
         echo '<div class="wrap">';
-	echo '<h2>Creators RSS Feed Options</h2>';
+        echo '<h2>Creators RSS Feed Options</h2>';
         echo '<form method="post" action="options.php">';
         settings_fields('creators_rss');
         do_settings_sections('creators_rss');
         echo '<p class="submit"><input type="submit" value="Save Changes" class="button button-primary" id="submit" name="submit"></p>';
         echo '</form>';
-	echo '</div>';
+        echo '</div>';
     }
     
     function settings_load_hook()
@@ -370,7 +368,7 @@ class CreatorsRSSParser
             
             foreach($features as $file_code=>$v)
             {
-                if($v && !isset($ids[$file_code]))
+                if($v == 'on' && !isset($ids[$file_code]))
                 {
                     self::$instance->create_user($file_code);
                 }

@@ -135,13 +135,24 @@ class CreatorsRSSParser
         return TRUE;
     }
     
-    
+    /**
+     * Check if a feature should get posted
+     * 
+     * @param string $filecode Creators feature file code
+     * @return boolean 
+     */ 
     private function should_post_feature($filecode)
     {
         $users = get_option('creators_feed_reader_features');
         return isset($users[$filecode]) && $users[$filecode] == 'on';
     }
     
+    /**
+     * Create a post from a feature release
+     * 
+     * @param object $item SimpleXML item object
+     * @return mixed ID of new post, or WP_Error on error
+     */
     private function create_post($item)
     {
         $post = array();
@@ -173,6 +184,12 @@ class CreatorsRSSParser
         }
     }
     
+    /**
+     * Create a user account for a Creators feature
+     * 
+     * @param string $filecode Creators feature file code
+     * @return boolean
+     */
     private function create_user($filecode)
     {        
         $cr = new Creators_API(get_option('creators_feed_reader_api_key'));
@@ -413,9 +430,7 @@ class CreatorsRSSParser
     }
 }
 
-/*
- * Set hooks
- */
+/* Set hooks */
 
 add_action('plugins_loaded', array('CreatorsRSSParser', 'init'));
 

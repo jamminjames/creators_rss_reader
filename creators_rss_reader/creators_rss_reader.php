@@ -11,13 +11,13 @@
 
 defined( 'ABSPATH' ) OR exit;
 
-if(!file_exists(dirname(__FILE__).'/creators_php.php'))
+if(!file_exists(dirname(__FILE__).'/creators_php/creators_php.php'))
 {
     exit('Please install the Creators PHP library to continue');
 }
 else
 {
-    require_once(dirname(__FILE__).'/creators_php.php');
+    require_once(dirname(__FILE__).'/creators_php/creators_php.php');
 }
 
 class CreatorsRSSParser

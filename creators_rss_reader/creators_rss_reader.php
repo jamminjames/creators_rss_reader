@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: Creators RSS Reader
- * Plugin URI: http://get.creators.com/docs/wiki#wp_plugin
+ * Plugin URI: https://github.com/creatorssyn/creators_rss_reader
  * Description: A plugin to interface Creators content directly into your WordPress CMS
  * Version: 1.0.0
- * Author: Brandon Telle <btelle@creators.com>
+ * Author: Creators Syndicate <btelle@creators.com>
  * Author URI: http://www.creators.com
  * License: MIT
  */

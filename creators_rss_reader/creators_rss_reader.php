@@ -172,7 +172,7 @@ class CreatorsRSSReader
         );
         
         $wp_query = new WP_Query($args);
-        remove_filter( 'posts_where', 'title_filter', 10, 2 );
+        remove_filter( 'posts_where', array('CreatorsRSSReader', 'filter_post_like'), 10, 2 );
         
         if(!$wp_query->have_posts())
         {

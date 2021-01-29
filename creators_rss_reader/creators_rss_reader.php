@@ -34,7 +34,7 @@ class CreatorsRSSReader
     
     protected static $instance;
     
-    function init() 
+    public static function init() 
     {
         is_null(self::$instance) AND self::$instance = new self;
         
@@ -50,7 +50,7 @@ class CreatorsRSSReader
     /**
      * Activate the plugin
      */
-    function activate()
+    public static function activate()
     {
         if (!current_user_can('activate_plugins'))
             return;
@@ -68,7 +68,7 @@ class CreatorsRSSReader
     /**
      * Deactivate the plugin
      */
-    function deactivate()
+    public static function deactivate()
     {
         if (!current_user_can('activate_plugins'))
             return;
@@ -81,7 +81,7 @@ class CreatorsRSSReader
      * Uninstall the plugin
      * Should this delete all users and posts? 
      */
-    function uninstall()
+    public static function uninstall()
     {
         if (!current_user_can('activate_plugins'))
             return;
@@ -100,7 +100,7 @@ class CreatorsRSSReader
      * Read the Creators RSS Feed and post content to the site
      * @return boolean TRUE if feed was read, FALSE if feed cannot be read or hasn't been updated
      */
-    function parse_rss_feed()
+    public static function parse_rss_feed()
     {
         if(!function_exists('simplexml_load_file'))
         {
@@ -141,7 +141,7 @@ class CreatorsRSSReader
      * @param string $filecode Creators feature file code
      * @return boolean 
      */ 
-    private function should_post_feature($filecode)
+    public static private function should_post_feature($filecode)
     {
         $users = get_option('creators_feed_reader_features');
         return isset($users[$filecode]) && $users[$filecode] == 'on';
@@ -153,7 +153,7 @@ class CreatorsRSSReader
      * @param object $item SimpleXML item object
      * @return mixed ID of new post, or WP_Error on error
      */
-    private function create_post($item)
+    public static private function create_post($item)
     {
         $post = array();
         $post['post_content'] = (string)$item->description;
@@ -190,7 +190,7 @@ class CreatorsRSSReader
      * @param string $filecode Creators feature file code
      * @return boolean
      */
-    private function create_user($filecode)
+    public static private function create_user($filecode)
     {
         try
         {
@@ -249,7 +249,7 @@ class CreatorsRSSReader
      * @param string $author_string The author attribute of an RSS item
      * @return mixed User ID, or NULL if a user doesn't exist
      */
-    private function get_user_id($author_string)
+    public static private function get_user_id($author_string)
     {
         preg_match('/([a-z0-9]+)@/', $author_string, $m);
 
@@ -269,7 +269,7 @@ class CreatorsRSSReader
      * @param object $item SimpleXML item object
      * @return string Post URL
      */
-    private function parse_post_name($item)
+    public static private function parse_post_name($item)
     {
         $slug = get_option('creators_feed_reader_post_name_pattern');
         preg_match('|/([0-9]+)|', $item->guid, $matches);
@@ -286,7 +286,7 @@ class CreatorsRSSReader
      * @param string $title Feature title
      * @return string Username
      */
-    private function make_username($title)
+    public static private function make_username($title)
     {
         return sanitize_user(strtolower(str_replace(' ', '', $title)), TRUE);
     }
@@ -294,7 +294,7 @@ class CreatorsRSSReader
     /**
      * Settings functions
      */
-    function register_settings()
+    public static function register_settings()
     {
         register_setting('creators_rss', 'creators_feed_reader_api_key');
         register_setting('creators_rss', 'creators_feed_reader_auto_publish');
@@ -327,41 +327,41 @@ class CreatorsRSSReader
         }
     }
     
-    function add_menu_option()
+    public static function add_menu_option()
     {
         $page_hook = add_submenu_page('options-general.php', 'Creators RSS Feed', 'Creators RSS Feed', 'manage_options', 'creators-rss-feeds-options', array('CreatorsRSSReader', 'display_options_page'));
         add_action('load-'.$page_hook, array('CreatorsRSSReader', 'settings_load_hook'));
     }
     
-    function display_main_text()
+    public static function display_main_text()
     {
         echo '<p>General feed reader settings</p>';
     }
     
-    function display_features_text()
+    public static function display_features_text()
     {
         echo '<p>Enable features you want to post to your site below</p>';
     }
     
-    function display_setting_name_pattern()
+    public static function display_setting_name_pattern()
     {
         $option = get_option('creators_feed_reader_post_name_pattern');
         echo "<input id='creators_feed_reader_post_name_pattern' name='creators_feed_reader_post_name_pattern' size='40' type='text' value='{$option}' />";
     }
     
-    function display_setting_auto_publish()
+    public static function display_setting_auto_publish()
     {
         $option = get_option('creators_feed_reader_auto_publish');
         echo "<input id='creators_feed_reader_auto_publish' type='checkbox' name='creators_feed_reader_auto_publish' ".($option?"checked='checked'":"")." />";
     }
     
-    function display_setting_api_key()
+    public static function display_setting_api_key()
     {
         $option = get_option('creators_feed_reader_api_key');
         echo "<input id='creators_feed_reader_api_key' name='creators_feed_reader_api_key' size='40' type='text' value='{$option}' />";
     }
     
-    function display_setting_author_checkbox($args)
+    public static function display_setting_author_checkbox($args)
     {
         $file_code = $args[0];
         $authors = get_option('creators_feed_reader_features');
@@ -373,7 +373,7 @@ class CreatorsRSSReader
         echo "<input id='creators_feed_reader_features[{$file_code}]' type='checkbox' name='creators_feed_reader_features[{$file_code}]' ".($checked?"checked='checked'":"")." />";
     }
     
-    function display_options_page()
+    public static function display_options_page()
     {
         if ( !current_user_can( 'manage_options' ) )  {
             wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
@@ -389,7 +389,7 @@ class CreatorsRSSReader
         echo '</div>';
     }
     
-    function settings_load_hook()
+    public static function settings_load_hook()
     {
         if(isset($_GET['settings-updated']) && $_GET['settings-updated'])
         {
@@ -406,13 +406,13 @@ class CreatorsRSSReader
         }
     }
     
-    function plugin_action_links($links)
+    public static function plugin_action_links($links)
     {
         $links[] = '<a href="'. esc_url( get_admin_url(null, 'options-general.php?page=creators-rss-feeds-options') ) .'">Settings</a>';
         return $links;
     }
     
-    function filter_post_like($where, &$wp_query)
+    public static function filter_post_like($where, &$wp_query)
     {
         global $wpdb;
 

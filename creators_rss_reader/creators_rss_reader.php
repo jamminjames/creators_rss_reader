@@ -141,7 +141,7 @@ class CreatorsRSSReader
      * @param string $filecode Creators feature file code
      * @return boolean 
      */ 
-    public static private function should_post_feature($filecode)
+    private static function should_post_feature($filecode)
     {
         $users = get_option('creators_feed_reader_features');
         return isset($users[$filecode]) && $users[$filecode] == 'on';
@@ -153,7 +153,7 @@ class CreatorsRSSReader
      * @param object $item SimpleXML item object
      * @return mixed ID of new post, or WP_Error on error
      */
-    public static private function create_post($item)
+    private static function create_post($item)
     {
         $post = array();
         $post['post_content'] = (string)$item->description;
@@ -190,7 +190,7 @@ class CreatorsRSSReader
      * @param string $filecode Creators feature file code
      * @return boolean
      */
-    public static private function create_user($filecode)
+    private static function create_user($filecode)
     {
         try
         {
@@ -249,7 +249,7 @@ class CreatorsRSSReader
      * @param string $author_string The author attribute of an RSS item
      * @return mixed User ID, or NULL if a user doesn't exist
      */
-    public static private function get_user_id($author_string)
+    private static function get_user_id($author_string)
     {
         preg_match('/([a-z0-9]+)@/', $author_string, $m);
 
@@ -269,7 +269,7 @@ class CreatorsRSSReader
      * @param object $item SimpleXML item object
      * @return string Post URL
      */
-    public static private function parse_post_name($item)
+    private static function parse_post_name($item)
     {
         $slug = get_option('creators_feed_reader_post_name_pattern');
         preg_match('|/([0-9]+)|', $item->guid, $matches);
@@ -286,7 +286,7 @@ class CreatorsRSSReader
      * @param string $title Feature title
      * @return string Username
      */
-    public static private function make_username($title)
+    private static function make_username($title)
     {
         return sanitize_user(strtolower(str_replace(' ', '', $title)), TRUE);
     }

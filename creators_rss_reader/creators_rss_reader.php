@@ -118,7 +118,7 @@ class CreatorsRSSReader
         $xml = simplexml_load_file($url);
         
         var_dump($xml->channel);
-        /* TESTING: Comment out to let it run */
+
         if(strtotime($xml->channel->lastBuildDate) <= get_option('creators_feed_reader_last_run'))
         {
             echo "Feed is stale, bye!";

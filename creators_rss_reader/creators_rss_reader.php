@@ -171,15 +171,15 @@ class CreatorsRSSReader
 
 		// if nothing in an Author's category or tag, use mydefault
 		// in either case, explode by commas to create arrays
-		if (empty($postcat[$file_code])) {
-			$postcats = explode(',', $mydefault_cat);
+		if (empty($postcat[$file_code]) || is_null($postcat[$file_code])) {
+			$postcats = array_map('trim', explode(',', $mydefault_cat));
 		} else {
-			$postcats = explode(',', $postcat[$file_code]);
+			$postcats = array_map('trim', explode(',', $postcat[$file_code]));
 		}
-		if (empty($posttag[$file_code])) {
-			$posttags = explode(',', $mydefault_tag);
+		if (empty($posttag[$file_code]) || is_null($postcat[$file_code])) {
+			$posttags = array_map('trim', explode(',', $mydefault_tag));
 		} else {
-			$posttags = explode(',', $posttag[$file_code]);
+			$posttags = array_map('trim', explode(',', $posttag[$file_code]));
 		}
 
 		$post = array();
@@ -196,9 +196,8 @@ class CreatorsRSSReader
 
         add_filter( 'posts_where', array('CreatorsRSSReader', 'filter_post_like'), 10, 2 );
         
-	// using post_title instead of post_name (slug), as slug is changed by some themes via permalink settings, also changed filter_post_like()
         $args = array(
-		'cr_search_name' => $post['post_title']
+            'cr_search_name' => substr($post['post_name'], 0, strpos($post['post_name'], '-'))
         );
         
         $wp_query = new WP_Query($args);
@@ -479,11 +478,11 @@ class CreatorsRSSReader
 
         if($search_term = $wp_query->get('cr_search_name'))
         {
-            // add single quotes to search term
-            $search_term = ' \'' . $search_term . '\'';
+            $search_term = $wpdb->esc_like($search_term);
+            $search_term = ' \'' . $search_term . '-%\'';
             var_dump($search_term);
-			// changed from post_name (slug) to post_title and 'LIKE' to '='
-            $where .= ' AND ' . $wpdb->posts . '.post_title = '.$search_term;
+            $where .= ' AND ' . $wpdb->posts . '.post_name LIKE '.$search_term;
+
         }
         
         return $where;
